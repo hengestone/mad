@@ -4,7 +4,7 @@
 
 disabled() -> [].
 system() -> [compiler,syntax_tools,sasl,tools,mnesia,reltool,xmerl,crypto,kernel,stdlib,ssh,eldap,
-             wx,ssl,runtime_tools,public_key,observer,inets,asn1,et,eunit,hipe,os_mon,parsetools,odbc].
+             wx,ssl,runtime_tools,public_key,observer,inets,asn1,et,eunit,hipe,os_mon,parsetools,odbc,snmp].
 
 local_app() ->
     case filename:basename(filelib:wildcard("ebin/*.app"),".app") of
@@ -58,13 +58,14 @@ load(true,A,Acc,Config) ->
 % for user application we should merge app from ebin and from sys.config
 % and start application using tuple argument in app controller
 
-load(_,A,Acc,Config) ->
-    {application,Name,Map} = load_config(A),
-    NewEnv = merge(Config,Map,Name),
-    acc_start({application,Name,set_value(env,1,Map,{env,NewEnv})},Acc).
+load(X,A,Acc,Config) ->
+    try {application,Name,Map} = load_config(A),
+        NewEnv = merge(Config,Map,Name),
+        acc_start({application,Name,set_value(env,1,Map,{env,NewEnv})},Acc)
+    catch E:R -> io:format("Application Load Error: ~p",[{X,A,Acc}]) end.
 
 merge(Config,Map,Name) ->
-    lists:foldl(fun({Name,E},Acc2)   ->
+    lists:foldl(fun({Name2,E},Acc2) when Name2 =:= Name ->
     lists:foldl(fun({K,V},Acc1)      -> set_value(K,1,Acc1,{K,V}) end,Acc2,E);
                           (_,Acc2)   -> Acc2 end, proplists:get_value(env,Map,[]), Config).
 
