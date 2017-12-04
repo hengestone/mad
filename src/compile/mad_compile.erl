@@ -38,8 +38,8 @@ dep(Cwd, _Conf, ConfigFile, Name) ->
     DepsRes = bool(deps(Cwd, Conf, ConfigFile, Deps)),
 
     SrcDir = filename:join([mad_utils:src(DepPath)]),
-    AllFiles = files(SrcDir,".yrl") ++ 
-               files(SrcDir,".xrl") ++ 
+    AllFiles = files(SrcDir,".yrl") ++
+               files(SrcDir,".xrl") ++
                files(SrcDir,".erl") ++ % comment this to build with erlc/1
                files(SrcDir,".app.src"),
     Files = case mad_utils:get_value(erl_first_files, Conf1, []) of
@@ -64,9 +64,9 @@ dep(Cwd, _Conf, ConfigFile, Name) ->
             file:make_dir(EbinDir),
             code:replace_path(Name,EbinDir),
 
-            Opts = mad_utils:get_value(erl_opts, Conf1, []),
-            FilesStatus = compile_files(Files,IncDir, EbinDir, Opts,Includes),
-            DTLStatus = mad_dtl:compile(DepPath,Conf1),
+            Opts = rebar_utils:erl_opts(Conf1),
+            FilesStatus = compile_files(Files,IncDir, EbinDir, Opts, Includes),
+            DTLStatus  = mad_dtl:compile(DepPath, Conf1),
             JADEStatus = mad_jade:compile(DepPath, Conf1),
             PortStatus = lists:any(fun(X)->X end,mad_port:compile(DepPath,Conf1)),
             % io:format("Status: ~p~n",[[Name,FilesStatus,DTLStatus,PortStatus,DepsRes]]),

@@ -1,0 +1,21 @@
+{
+        "folders":
+        [
+                {
+                        "path": "."
+                }
+        ],
+  "SublimeLinter":
+    {
+        "linters":
+        {
+            "erlc": {
+                "include_dirs": [
+                  "${project}/deps",
+                  "${project}/include"
+                ],
+            }
+        }
+    }
+}
+

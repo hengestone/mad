@@ -11,6 +11,12 @@ main(Params)      ->
                                fun (X,{C,R}) when is_atom(X) -> {[],[{X,C}|R]};
                                    (X,{C,R}) -> {[X|C],R} end,
                                {[],[]}, lists:map(fun atomize/1, Params)),
+      %% Make sure memoization server is running
+      case rmemo:start() of
+          {ok, _} -> ok;
+          {error, {already_started, _}} -> ok
+      end,
+
 
     return(
         lists:any(fun({error,_}) -> true; (_) -> false end,
