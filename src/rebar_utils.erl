@@ -377,7 +377,6 @@ delayed_halt(Code) ->
 -spec erl_opts(rebar_config:config()) -> list().
 erl_opts(Config) ->
     RawErlOpts = filter_defines(mad_utils:get_value(erl_opts, Config, []), []),
-    io:format("~p~n", [RawErlOpts]),
     Defines = [{d, list_to_atom(D)} ||
                   D <- mad_utils:get_value(defines, Config, [])],
     Opts = Defines ++ RawErlOpts,
