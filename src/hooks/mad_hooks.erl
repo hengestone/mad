@@ -3,9 +3,16 @@
 
 -spec run_hooks(pre|post, atom()) -> any().
 run_hooks(Type, Command) ->
-    {_Cwd, _ConfigFile, Config} = mad_utils:configs(),
-    Dir = mad_utils:cwd(),
-    run_hooks(Dir, Type, Command, Config).
+    {_Cwd, ConfigFile, Config} = mad_utils:configs(),
+    case Config of
+      {error, {Line, _Mod, Term}} ->
+        io:format(standard_error, "ERROR parsing file ~s:~w~n~p~n", [ConfigFile, Line, Term]),
+        {error, {Line, _Mod, Term}};
+      {error, Info} -> {error, Info};
+      _Conf ->
+        Dir = mad_utils:cwd(),
+        run_hooks(Dir, Type, Command, Config)
+    end.
 
 run_hooks(Dir, pre, Command, Config) ->
     run_hooks(Dir, pre_hooks, Command, Config);
@@ -40,8 +47,8 @@ apply_hook(Dir, Env, {Command, Hook}) ->
 %% Can be expanded
 create_env(_Config) -> [].
 
-%% SOURCE: 
-%%  https://github.com/erlang/rebar3/blob/master/src/rebar_utils.erl 
+%% SOURCE:
+%%  https://github.com/erlang/rebar3/blob/master/src/rebar_utils.erl
 is_arch(ArchRegex) ->
     case re:run(get_arch(), ArchRegex, [{capture, none}]) of
         match ->
@@ -117,7 +124,7 @@ sh(Command, Hook, Dir, Env) ->
     ),
     {done, Status, Out} = sh:sh_loop(Port, binary),
     case Status of
-        0 -> 
+        0 ->
             mad:info("~s~n", [Out]);
         _ ->
             mad:info("Failed hook for ~p with ~s~n", [Command, Out]),

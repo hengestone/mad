@@ -18,8 +18,9 @@ consult(File) ->
     case file:consult(AbsFile) of
         {ok, V} ->
             V;
-        _ ->
-            []
+        {error, {Line, _Mod, Term}} ->
+            io:format(standard_error, "ERROR parsing file ~s:~w~n~p~n", [File, Line, Term]),
+            exit(error)
     end.
 
 src(Dir) -> filename:join(Dir, "src").
@@ -90,6 +91,9 @@ configs() ->
     Cwd            = try fs:path() catch _:_ -> cwd() end,
     ConfigFile     = "rebar.config",
     ConfigFileAbs  = filename:join(Cwd, ConfigFile),
-    Conf           = mad_utils:consult(ConfigFileAbs),
-    Conf1          = mad_script:script(ConfigFileAbs, Conf, ""),
-    {Cwd,ConfigFile,Conf1}.
+    Conf1 = case file:consult(ConfigFileAbs) of
+        {ok, V} ->
+          mad_script:script(ConfigFileAbs, V, "");
+        Err -> Err
+    end,
+    {Cwd, ConfigFile, Conf1}.

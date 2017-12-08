@@ -5,7 +5,8 @@
 script(ConfigFile, Conf, _) ->
     File = ConfigFile ++ ".script",
     case file:script(File, [{'CONFIG', Conf}, {'SCRIPT', File}]) of
-        {ok, {error,_}} -> Conf;
+        {ok, {error, Out}} -> exit({error, Out});
         {ok, Out} -> Out;
-        {error, _} -> Conf
+        {error, enoent} -> Conf;
+        {error, Out} -> exit({error, Out})
     end.

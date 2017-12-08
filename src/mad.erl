@@ -6,7 +6,6 @@
 
 main([])          -> help();
 main(Params)      ->
-
     { Invalid, Valid } = lists:foldr(
                                fun (X,{C,R}) when is_atom(X) -> {[],[{X,C}|R]};
                                    (X,{C,R}) -> {[X|C],R} end,
@@ -22,10 +21,13 @@ main(Params)      ->
         lists:any(fun({error,_}) -> true; (_) -> false end,
             lists:flatten(
                 lists:foldl(fun({Fun,Arg},[]) ->
-                    mad_hooks:run_hooks(pre, Fun),
-                    Errors = errors((profile()):Fun(Arg)),
-                    mad_hooks:run_hooks(post, Fun),
-                    Errors;
+                    case mad_hooks:run_hooks(pre, Fun) of
+                      {error, _} -> [];
+                      _ ->
+                        Errors = errors((profile()):Fun(Arg)),
+                        mad_hooks:run_hooks(post, Fun),
+                        Errors
+                      end;
                 ({_,_},Err) ->
                     errors(Invalid), {return,Err}
                 end,
