@@ -20,7 +20,8 @@ consult(File) ->
             V;
         {error, {Line, _Mod, Term}} ->
             io:format(standard_error, "ERROR parsing file ~s:~w~n~p~n", [File, Line, Term]),
-            exit(error)
+            exit(error);
+        {error, enoent} ->[]
     end.
 
 src(Dir) -> filename:join(Dir, "src").
