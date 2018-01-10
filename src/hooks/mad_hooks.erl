@@ -6,7 +6,7 @@ run_hooks(Type, Command) ->
     {_Cwd, ConfigFile, Config} = mad_utils:configs(),
     case Config of
       {error, {Line, _Mod, Term}} ->
-        io:format(standard_error, "ERROR parsing file ~s:~w~n~p~n", [ConfigFile, Line, Term]),
+        io:format(standard_error, "ERROR parsing file ~s Line ~w: ~p~n", [ConfigFile, Line, string:join(Term, " ")]),
         {error, {Line, _Mod, Term}};
       {error, Info} -> {error, Info};
       _Conf ->

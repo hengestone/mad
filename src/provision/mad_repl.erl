@@ -30,13 +30,15 @@ load_config() ->
    Config = wildcards(["sys.config",lists:concat(["etc/",mad:host(),"/sys.config"])]),
    _Apps = case Config of
         [] -> case mad_repl:load_file("sys.config") of
-              {error,_} -> [];
+              {error,_} ->[];
               {ok,Bin} -> parse(unicode:characters_to_list(Bin)) end;
       File -> case file:consult(hd(File)) of
-              {error,_} -> [];
+              {error, {Line, _Mod, Term}} ->
+                io:format(standard_error, "ERROR parsing file ~s Line ~w: ~p~n", [File, Line, string:join(Term, " ")]),
+                init:stop();
               {ok,[A]} -> A end end.
 
-load_config(AppConfigs,[]) ->
+load_config(AppConfigs, []) ->
     [ [ application:set_env(App,K,V) || {K,V} <- Cfg] || {App,Cfg} <- AppConfigs],
     load_includes(AppConfigs).
 
@@ -80,7 +82,7 @@ add_replace(_____,Name,Pos,List,New) -> lists:keyreplace(Name,Pos,List,New).
 cwd() -> case  file:get_cwd() of {ok, Cwd} -> Cwd; _ -> "." end.
 
 sh(Params) ->
-    { _Cwd,_ConfigFileName,_Config } = mad_utils:configs(),
+    { _Cwd, _ConfigFileName, _Config } = mad_utils:configs(),
     SystemPath = filelib:wildcard(code:root_dir() ++ "/lib/{"
               ++ string:join([atom_to_list(X)||X<-mad_repl:system()],",") ++ "}-*/ebin"),
     UserPath   = wildcards(["{apps,deps}/*/ebin","ebin"]),
@@ -88,7 +90,7 @@ sh(Params) ->
     code:add_path(filename:join([cwd(),filename:basename(escript:script_name())])),
     load(),
     Config = load_config(),
-    Driver = mad_utils:get_value(shell_driver,_Config,user_drv),
+    Driver = mad_utils:get_value(shell_driver, _Config, user_drv),
     repl_intro(Config),
     case os:type() of
          {win32,nt} -> os:cmd("chcp 65001"), shell:start();
@@ -96,8 +98,8 @@ sh(Params) ->
                        supervisor:terminate_child(kernel_sup, user),
                        Driver:start(),
                        wait(3000),
-                       rewrite_leaders(O,whereis(user)) end,
-    load_apps(Params,Config,[]),
+                       rewrite_leaders(O, whereis(user)) end,
+    load_apps(Params, Config, []),
     case Params of
         ["applist"] -> skip;
         _ ->  timer:sleep(infinity) end.
